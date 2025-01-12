@@ -1,0 +1,15 @@
+[package]
+name = "ccanvas-packet-build"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+
+[lib]
+proc-macro = true
+
+[features]
+
+# packet-build.inject.begin
+test = []
+# packet-build.inject.end
