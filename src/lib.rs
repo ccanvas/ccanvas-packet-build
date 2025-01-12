@@ -6,7 +6,7 @@ use proc_macro::TokenStream;
 pub fn group_id(attr: TokenStream, item: TokenStream) -> TokenStream {
     item.into_iter()
         .chain(
-            format!("\n\nimpl ApprConn {{ pub fn id() -> &'static [u8] {{ &[{attr}] }} }}",)
+            format!("\n\nimpl Group {{ pub fn id() -> &'static [u8] {{ &[{attr}] }} }}",)
                 .parse::<TokenStream>()
                 .unwrap(),
         )
