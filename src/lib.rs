@@ -31,7 +31,7 @@ pub fn declare_packet(_: TokenStream) -> TokenStream {
     });
 
     let packet_enum = format!(
-        "pub enum Packet {{\n{}}}",
+        "#[cfg_attr(feature = \"debug\", derive(Debug))]\npub enum Packet {{\n{}}}",
         index.iter().fold(String::new(), |mut acc, (item, _)| {
             write!(
                 acc,
@@ -57,7 +57,7 @@ pub fn declare_packet(_: TokenStream) -> TokenStream {
         }}
     }}
 }}"#, index.iter().fold(String::new(), |mut acc, (name, ident)| {
-    write!(acc, "\n            #[cfg(feature=\"{name}\")]\n            [{ident}] => Some(Self::{}{}({name}::Group::from_bytes(bytes)?)),", name[0..1].to_uppercase(), &name[1..]).unwrap();
+    write!(acc, "\n            #[cfg(feature=\"{name}\")]\n            [{ident}] => Some(Self::{}{}({name}::Group::from_bytes(&bytes[1+ident_len..])?)),", name[0..1].to_uppercase(), &name[1..]).unwrap();
     acc
 }));
 
