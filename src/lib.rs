@@ -61,10 +61,17 @@ pub fn declare_packet(_: TokenStream) -> TokenStream {
     acc
 }));
 
+    let any = index.iter().fold(String::new(), |mut acc, (name, _)| {
+        write!(acc, "feature = \"{name}\",").unwrap();
+        acc
+    });
     let ser = format!(r#"impl Packet {{
     pub fn to_bytes(&self) -> Vec<u8> {{
+        #[cfg(any({any}))]
         match self {{{}
         }}
+        #[cfg(not(any({any})))]
+        Vec::new()
     }}
 }}"#, index.iter().fold(String::new(), |mut acc, (name, _)| {
         write!(acc, "\n            #[cfg(feature=\"{name}\")]\n            Self::{}{}(group) => group.to_bytes(),", name[0..1].to_uppercase(), &name[1..]).unwrap();
@@ -72,12 +79,12 @@ pub fn declare_packet(_: TokenStream) -> TokenStream {
     }));
 
     let downcast = index.iter().fold(String::new(), |mut acc, (name, _)| {
-        writeln!(acc, "impl TryFrom<Packet> for {name}::Group {{ type Error = (); fn try_from(v: Packet) -> Result<Self, Self::Error> {{ if let Packet::{}{}(r) = v {{ Ok(r) }} else {{ Err(()) }} }} }}", name[0..1].to_uppercase(), &name[1..]).unwrap();
+        writeln!(acc, "#[cfg(feature=\"{name}\")]\nimpl TryFrom<Packet> for {name}::Group {{ type Error = (); fn try_from(v: Packet) -> Result<Self, Self::Error> {{ if let Packet::{}{}(r) = v {{ Ok(r) }} else {{ Err(()) }} }} }}", name[0..1].to_uppercase(), &name[1..]).unwrap();
         acc
     });
 
     let upcast = index.iter().fold(String::new(), |mut acc, (name, _)| {
-        writeln!(acc, "impl From<{name}::Group> for Packet {{ fn from(v: {name}::Group) -> Self {{ Self::{}{}(v) }} }}", name[0..1].to_uppercase(), &name[1..]).unwrap();
+        writeln!(acc, "#[cfg(feature=\"{name}\")]\nimpl From<{name}::Group> for Packet {{ fn from(v: {name}::Group) -> Self {{ Self::{}{}(v) }} }}", name[0..1].to_uppercase(), &name[1..]).unwrap();
         acc
     });
 
